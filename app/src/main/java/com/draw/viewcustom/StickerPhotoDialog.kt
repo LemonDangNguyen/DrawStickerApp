@@ -4,14 +4,16 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.NonNull
@@ -24,13 +26,19 @@ import com.draw.adapter.ImageAdapter
 import com.draw.extensions.checkPer
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class StickerPhotoDialog(private val context: Context) : BottomSheetDialogFragment() {
+class StickerPhotoDialog(
+    private var stickerPhotoView: StickerPhotoView,
+    private val context: Context
+) : BottomSheetDialogFragment() {
+
     private lateinit var rvImages: RecyclerView
     private lateinit var imageAdapter: ImageAdapter
     private var imagePaths: MutableList<String> = mutableListOf()
+    private var selectedImagePath: String? = null // Để lưu đường dẫn ảnh được chọn
 
+    // Kiểm tra quyền truy cập lưu trữ
     val storagePer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        arrayOf(Manifest.permission.READ_MEDIA_IMAGES) //, Manifest.permission.READ_MEDIA_VIDEO
+        arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
     else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
 
     // Định nghĩa hằng số REQUEST_PERMISSION
@@ -50,7 +58,24 @@ class StickerPhotoDialog(private val context: Context) : BottomSheetDialogFragme
 
         checkPermission.launch(storagePer)
 
+        val ivCheck = dialogView.findViewById<ImageView>(R.id.ivCheck)
+        ivCheck.setOnClickListener {
+            // Cập nhật StickerPhotoView với ảnh đã chọn
+            selectedImagePath?.let { path ->
+                val bitmap = getBitmapFromPath(path)
+                bitmap?.let {
+                    stickerPhotoView.setImage(it) // Sử dụng Bitmap thay vì String
+                }
+            }
+            stickerPhotoView.visibility = View.VISIBLE // Hiển thị StickerPhotoView
+            dismiss() // Đóng BottomSheetDialog sau khi cập nhật
+        }
+
+
         return dialogView
+    }
+    private fun getBitmapFromPath(path: String): Bitmap? {
+        return BitmapFactory.decodeFile(path)
     }
 
     private var checkPermission =
@@ -62,7 +87,7 @@ class StickerPhotoDialog(private val context: Context) : BottomSheetDialogFragme
         val uri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media.DATA)
 
-        val cursor: Cursor? = context?.contentResolver?.query(uri, projection, null, null, null)
+        val cursor: Cursor? = context.contentResolver.query(uri, projection, null, null, null)
         cursor?.use {
             val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
 
@@ -72,7 +97,9 @@ class StickerPhotoDialog(private val context: Context) : BottomSheetDialogFragme
             }
 
             // Thiết lập adapter cho RecyclerView
-            imageAdapter = ImageAdapter(requireContext(), imagePaths)
+            imageAdapter = ImageAdapter(requireContext(), imagePaths) { imagePath ->
+                selectedImagePath = imagePath // Cập nhật đường dẫn ảnh được chọn
+            }
             rvImages.adapter = imageAdapter
         } ?: run {
             Toast.makeText(context, "No images found", Toast.LENGTH_SHORT).show()

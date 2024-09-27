@@ -10,8 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.draw.R
 
-class ImageAdapter(private val context: Context, private val imagePaths: List<String>) :
-    RecyclerView.Adapter<ImageAdapter.ViewHolder>() {
+class ImageAdapter(
+    private val context: Context,
+    private val imagePaths: List<String>,
+    private val onImageSelected: (String) -> Unit // Callback để thông báo ảnh đã chọn
+) : RecyclerView.Adapter<ImageAdapter.ViewHolder>() {
 
     private var selectedPosition: Int = RecyclerView.NO_POSITION // Vị trí được chọn
 
@@ -44,6 +47,9 @@ class ImageAdapter(private val context: Context, private val imagePaths: List<St
         holder.itemView.setOnClickListener {
             val previousPosition = selectedPosition
             selectedPosition = position
+
+            // Gọi callback với đường dẫn ảnh được chọn
+            onImageSelected(imagePath)
 
             // Cập nhật màu nền của hình cũ và hình mới
             notifyItemChanged(previousPosition)

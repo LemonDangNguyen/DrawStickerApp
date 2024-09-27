@@ -50,6 +50,7 @@ import com.draw.ultis.ViewControl.visible
 import com.draw.viewcustom.DrawView
 import com.draw.viewcustom.StickerImportDialog
 import com.draw.viewcustom.StickerPhotoDialog
+import com.draw.viewcustom.StickerPhotoView
 import com.draw.viewcustom.StickerTextDialog
 import com.draw.viewcustom.StickerTextView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -66,6 +67,7 @@ import java.io.FileOutputStream
 
 @SuppressLint("NotifyDataSetChanged")
 class DrawActivity : BaseActivity() {
+
     private val binding by lazy { ActivityDrawBinding.inflate(layoutInflater) }
     private lateinit var adapter: DrawViewAdapter
     private lateinit var runable: Runnable
@@ -85,12 +87,11 @@ class DrawActivity : BaseActivity() {
         binding.btnCreateAnimation.isClickable = false
         binding.btnCreateAnimation.isSelected = true
         binding.btnCreateAnimation.isClickable = true
-
+        val stickerPhotoView = binding.stickerPhotoView
         binding.btnPrevios.isEnabled = false
         val stickerTextView = binding.stickerTextView
         stickerTextView.visibility = View.GONE
-        val photoSticker = binding.stikerPhoto
-        photoSticker.visibility =View.GONE
+        stickerPhotoView.visibility =View.GONE
         isGuide = intent.getIntExtra(KEY_POSITION_ANIM_GUIDE, -1) != -1
 
 
@@ -258,7 +259,7 @@ class DrawActivity : BaseActivity() {
           //  binding.drawView.setEraserMode(false) // hoặc setPenMode(true) nếu cần
         }
         binding.btnInsertPicture.setOnClickListener {
-            showStickerPhotoDialog()
+            showStickerPhotoDialog(stickerPhotoView)
         }
         binding.btnInsertSticker.setOnClickListener {
             showStickerImportDialog()
@@ -392,8 +393,8 @@ class DrawActivity : BaseActivity() {
         dialog.show(supportFragmentManager, "StickerImportDialog")
     }
 
-    private fun showStickerPhotoDialog() {
-        val dialog = StickerPhotoDialog(this@DrawActivity)
+    private fun showStickerPhotoDialog(stickerPhotoView: StickerPhotoView) {
+        val dialog = StickerPhotoDialog(stickerPhotoView, this@DrawActivity)
         dialog.show(supportFragmentManager, "StickerPhotoDialog")
     }
 

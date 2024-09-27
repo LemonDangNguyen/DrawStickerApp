@@ -98,7 +98,7 @@ class StickerTextView @JvmOverloads constructor(
         borderView.addView(deleteButton)
 
         flipButton = AppCompatImageView(context).apply {
-            setImageResource(R.drawable.ic_sticker_flip) // Thay bằng icon bạn muốn
+            setImageResource(R.drawable.ic_sticker_flip)
             layoutParams = LayoutParams(30, 30).apply {
                 addRule(ALIGN_PARENT_TOP, TRUE)
                 addRule(CENTER_HORIZONTAL, TRUE)

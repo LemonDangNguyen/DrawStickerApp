@@ -205,7 +205,7 @@
             app:penColor="#000000"
             app:penWidth="10" />
         <com.draw.viewcustom.StickerPhotoView
-            android:id="@+id/stiker_photo"
+            android:id="@+id/stickerPhotoView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
         <ImageView
