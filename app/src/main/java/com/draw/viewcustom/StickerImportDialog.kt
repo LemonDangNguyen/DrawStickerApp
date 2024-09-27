@@ -14,10 +14,11 @@ import com.draw.adapter.CategoryMemeAdapter
 import com.draw.adapter.MemeAdapter
 import com.draw.database.DataMemeIcon
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-
 class StickerImportDialog(
     private var stickerMemeView: StickerMemeView
 ) : BottomSheetDialogFragment() {
+
+    private lateinit var memeAdapter: MemeAdapter // Thêm biến này để truy cập adapter của meme
 
     @SuppressLint("MissingInflatedId")
     override fun onCreateView(
@@ -46,8 +47,15 @@ class StickerImportDialog(
         // Xử lý nút xác nhận
         val ivCheck = dialogView.findViewById<ImageView>(R.id.ivCheck)
         ivCheck.setOnClickListener {
+            // Lấy meme đã chọn từ adapter
+            val selectedMeme = memeAdapter.getSelectedMeme()
 
-            stickerMemeView.visibility = View.VISIBLE // Hiển thị StickerMemeView
+            if (selectedMeme != null) {
+                // Đặt meme vào StickerMemeView
+                stickerMemeView.visibility = View.VISIBLE
+                stickerMemeView.setImageResource(selectedMeme) // Thêm hình ảnh meme
+            }
+
             dismiss() // Đóng dialog sau khi thêm nhãn dán
         }
 
@@ -55,7 +63,7 @@ class StickerImportDialog(
     }
 
     private fun setupMemeRecyclerView(view: View, memes: List<Int>) {
-        val memeAdapter = MemeAdapter(memes)
+        memeAdapter = MemeAdapter(memes) // Khởi tạo adapter của meme
         view.findViewById<RecyclerView>(R.id.memeRecyclerView).apply {
             layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = memeAdapter

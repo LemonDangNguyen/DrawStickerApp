@@ -212,6 +212,10 @@
             android:id="@+id/stickerMemeView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+        <com.draw.viewcustom.StickerTextView
+            android:id="@+id/stickerTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
         <ImageView
             android:id="@+id/img_preview"
             android:layout_width="match_parent"
@@ -220,10 +224,7 @@
             android:visibility="invisible" />
 
 
-        <com.draw.viewcustom.StickerTextView
-            android:id="@+id/stickerTextView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+
 
 
 

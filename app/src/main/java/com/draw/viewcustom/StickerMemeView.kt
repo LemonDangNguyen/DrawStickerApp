@@ -7,7 +7,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatTextView
 import com.draw.R
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -20,7 +19,6 @@ class StickerMemeView @JvmOverloads constructor(
 ) : RelativeLayout(context, attrs) {
 
     private lateinit var memeImageView: AppCompatImageView
-    private lateinit var memeTextView: AppCompatTextView
     private lateinit var deleteButton: AppCompatImageView
     private lateinit var flipButton: AppCompatImageView
     private lateinit var transformButton: AppCompatImageView
@@ -50,18 +48,6 @@ class StickerMemeView @JvmOverloads constructor(
             setOnTouchListener { _, event -> handleTouch(event) }
         }
         addView(memeImageView)
-
-        // Initialize TextView for meme text
-        memeTextView = AppCompatTextView(context).apply {
-            layoutParams = LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-            )
-            setText("Your Meme Text")
-            setTextSize(16f) // Adjust as needed
-            setOnTouchListener { _, event -> handleTouch(event) }
-        }
-        addView(memeTextView)
 
         // Initialize buttons
         deleteButton = AppCompatImageView(context).apply {
@@ -100,8 +86,8 @@ class StickerMemeView @JvmOverloads constructor(
         updateControlButtonPositions()
     }
 
-    fun setText(text: String) {
-        memeTextView.text = text
+    fun setImageResource(resourceId: Int) {
+        memeImageView.setImageResource(resourceId)
         updateControlButtonPositions()
     }
 
@@ -118,15 +104,10 @@ class StickerMemeView @JvmOverloads constructor(
 
         transformButton.x = memeImageView.x + imageWidth - transformButton.width
         transformButton.y = memeImageView.y + imageHeight - transformButton.height
-
-        // Adjust text view position if necessary
-        memeTextView.x = memeImageView.x
-        memeTextView.y = memeImageView.y + imageHeight + 10 // Adjust for spacing
     }
 
     private fun flipMeme() {
         memeImageView.scaleX *= -1
-        memeTextView.scaleX *= -1
     }
 
     private fun removeMeme() {
@@ -152,12 +133,13 @@ class StickerMemeView @JvmOverloads constructor(
                     // Move meme
                     memeImageView.translationX += deltaX
                     memeImageView.translationY += deltaY
-                    memeTextView.translationX += deltaX
-                    memeTextView.translationY += deltaY
 
                     // Update last touch position
                     lastTouchX = event.rawX
                     lastTouchY = event.rawY
+
+                    // Cập nhật vị trí các nút
+                    updateControlButtonPositions()
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -166,6 +148,7 @@ class StickerMemeView @JvmOverloads constructor(
         }
         return true
     }
+
 
     private fun handleTransform(event: MotionEvent): Boolean {
         when (event.action) {
@@ -188,8 +171,6 @@ class StickerMemeView @JvmOverloads constructor(
                         if (scaleFactor > 0.5f && scaleFactor < 2f) {
                             memeImageView.scaleX = scaleFactor
                             memeImageView.scaleY = scaleFactor
-                            memeTextView.scaleX = scaleFactor
-                            memeTextView.scaleY = scaleFactor
                             updateControlButtonPositions()
                         }
                     }
@@ -198,7 +179,6 @@ class StickerMemeView @JvmOverloads constructor(
                     val newRotation = getAngle(event.rawX - memeImageView.x, event.rawY - memeImageView.y)
                     val rotationDelta = newRotation - initialRotation
                     memeImageView.rotation += rotationDelta
-                    memeTextView.rotation += rotationDelta
                     initialRotation = newRotation
                 }
             }

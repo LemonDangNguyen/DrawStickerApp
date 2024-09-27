@@ -393,7 +393,6 @@ class DrawActivity : BaseActivity() {
 
     private fun showStickerImportDialog( stickerMemeView: StickerMemeView) {
         val dialog = StickerImportDialog(stickerMemeView)
-
         dialog.show(supportFragmentManager, "StickerImportDialog")
     }
 

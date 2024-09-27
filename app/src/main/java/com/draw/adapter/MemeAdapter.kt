@@ -55,4 +55,12 @@ class MemeAdapter(
             }
         }
     }
+    fun getSelectedMeme(): Int? {
+        return if (selectedPosition != RecyclerView.NO_POSITION) {
+            memes[selectedPosition]
+        } else {
+            null
+        }
+    }
+
 }
