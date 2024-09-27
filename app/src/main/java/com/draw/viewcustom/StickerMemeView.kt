@@ -7,18 +7,20 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatTextView
 import com.draw.R
 import kotlin.math.atan2
 import kotlin.math.hypot
 import android.os.Handler
 import android.os.Looper
 
-class StickerPhotoView @JvmOverloads constructor(
+class StickerMemeView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : RelativeLayout(context, attrs) {
 
-    private lateinit var stickerImageView: AppCompatImageView
+    private lateinit var memeImageView: AppCompatImageView
+    private lateinit var memeTextView: AppCompatTextView
     private lateinit var deleteButton: AppCompatImageView
     private lateinit var flipButton: AppCompatImageView
     private lateinit var transformButton: AppCompatImageView
@@ -35,19 +37,31 @@ class StickerPhotoView @JvmOverloads constructor(
     private var hideButtonsRunnable: Runnable? = null
 
     init {
-        initStickerView()
+        initMemeView()
     }
 
-    private fun initStickerView() {
-        // Initialize ImageView
-        stickerImageView = AppCompatImageView(context).apply {
+    private fun initMemeView() {
+        // Initialize ImageView for meme
+        memeImageView = AppCompatImageView(context).apply {
             layoutParams = LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
             )
             setOnTouchListener { _, event -> handleTouch(event) }
         }
-        addView(stickerImageView)
+        addView(memeImageView)
+
+        // Initialize TextView for meme text
+        memeTextView = AppCompatTextView(context).apply {
+            layoutParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            setText("Your Meme Text")
+            setTextSize(16f) // Adjust as needed
+            setOnTouchListener { _, event -> handleTouch(event) }
+        }
+        addView(memeTextView)
 
         // Initialize buttons
         deleteButton = AppCompatImageView(context).apply {
@@ -56,7 +70,7 @@ class StickerPhotoView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
             )
-            setOnClickListener { removeSticker() }
+            setOnClickListener { removeMeme() }
         }
         addView(deleteButton)
 
@@ -66,7 +80,7 @@ class StickerPhotoView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
             )
-            setOnClickListener { flipSticker() }
+            setOnClickListener { flipMeme() }
         }
         addView(flipButton)
 
@@ -82,30 +96,40 @@ class StickerPhotoView @JvmOverloads constructor(
     }
 
     fun setImage(bitmap: Bitmap) {
-        stickerImageView.setImageBitmap(bitmap)
+        memeImageView.setImageBitmap(bitmap)
+        updateControlButtonPositions()
+    }
+
+    fun setText(text: String) {
+        memeTextView.text = text
         updateControlButtonPositions()
     }
 
     private fun updateControlButtonPositions() {
-        val imageWidth = stickerImageView.width
-        val imageHeight = stickerImageView.height
+        val imageWidth = memeImageView.width
+        val imageHeight = memeImageView.height
 
-        // Đặt vị trí cho các nút điều khiển theo vị trí của nhãn dán
-        deleteButton.x = stickerImageView.x + imageWidth - deleteButton.width
-        deleteButton.y = stickerImageView.y
+        // Set positions for control buttons relative to the meme image
+        deleteButton.x = memeImageView.x + imageWidth - deleteButton.width
+        deleteButton.y = memeImageView.y
 
-        flipButton.x = stickerImageView.x + (imageWidth / 2) - (flipButton.width / 2)
-        flipButton.y = stickerImageView.y
+        flipButton.x = memeImageView.x + (imageWidth / 2) - (flipButton.width / 2)
+        flipButton.y = memeImageView.y
 
-        transformButton.x = stickerImageView.x + imageWidth - transformButton.width
-        transformButton.y = stickerImageView.y + imageHeight - transformButton.height
+        transformButton.x = memeImageView.x + imageWidth - transformButton.width
+        transformButton.y = memeImageView.y + imageHeight - transformButton.height
+
+        // Adjust text view position if necessary
+        memeTextView.x = memeImageView.x
+        memeTextView.y = memeImageView.y + imageHeight + 10 // Adjust for spacing
     }
 
-    private fun flipSticker() {
-        stickerImageView.scaleX *= -1
+    private fun flipMeme() {
+        memeImageView.scaleX *= -1
+        memeTextView.scaleX *= -1
     }
 
-    private fun removeSticker() {
+    private fun removeMeme() {
         this.visibility = View.GONE
     }
 
@@ -115,9 +139,9 @@ class StickerPhotoView @JvmOverloads constructor(
                 lastTouchX = event.rawX
                 lastTouchY = event.rawY
                 isDragging = true
-                // Hiển thị các nút điều khiển tại vị trí hiện tại của nhãn dán
+                // Show control buttons at the current position of the meme
                 showControlButtons()
-                // Lập lịch ẩn các nút sau 2 giây
+                // Schedule hiding buttons after 2 seconds
                 scheduleHideControlButtons()
             }
             MotionEvent.ACTION_MOVE -> {
@@ -125,14 +149,13 @@ class StickerPhotoView @JvmOverloads constructor(
                     val deltaX = event.rawX - lastTouchX
                     val deltaY = event.rawY - lastTouchY
 
-                    // Di chuyển nhãn dán
-                    stickerImageView.translationX += deltaX
-                    stickerImageView.translationY += deltaY
+                    // Move meme
+                    memeImageView.translationX += deltaX
+                    memeImageView.translationY += deltaY
+                    memeTextView.translationX += deltaX
+                    memeTextView.translationY += deltaY
 
-                    // Di chuyển các nút cùng với nhãn dán
-                    updateControlButtonPositions()
-
-                    // Cập nhật vị trí chạm cuối
+                    // Update last touch position
                     lastTouchX = event.rawX
                     lastTouchY = event.rawY
                 }
@@ -150,29 +173,32 @@ class StickerPhotoView @JvmOverloads constructor(
                 lastTouchX = event.rawX
                 lastTouchY = event.rawY
                 initialDistance = getDistance(event)
-                initialRotation = getAngle(event.rawX - stickerImageView.x, event.rawY - stickerImageView.y)
+                initialRotation = getAngle(event.rawX - memeImageView.x, event.rawY - memeImageView.y)
                 isTransforming = true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isTransforming) {
                     val newDistance = getDistance(event)
 
-                    // Kiểm tra khoảng cách ban đầu
+                    // Check initial distance
                     if (initialDistance > 0 && newDistance > 0) {
                         val scaleFactor = newDistance / initialDistance
 
-                        // Giới hạn tỷ lệ phóng to
+                        // Limit zoom
                         if (scaleFactor > 0.5f && scaleFactor < 2f) {
-                            stickerImageView.scaleX = scaleFactor
-                            stickerImageView.scaleY = scaleFactor
+                            memeImageView.scaleX = scaleFactor
+                            memeImageView.scaleY = scaleFactor
+                            memeTextView.scaleX = scaleFactor
+                            memeTextView.scaleY = scaleFactor
                             updateControlButtonPositions()
                         }
                     }
 
-                    // Tính góc mới để xoay
-                    val newRotation = getAngle(event.rawX - stickerImageView.x, event.rawY - stickerImageView.y)
+                    // Calculate new rotation
+                    val newRotation = getAngle(event.rawX - memeImageView.x, event.rawY - memeImageView.y)
                     val rotationDelta = newRotation - initialRotation
-                    stickerImageView.rotation += rotationDelta
+                    memeImageView.rotation += rotationDelta
+                    memeTextView.rotation += rotationDelta
                     initialRotation = newRotation
                 }
             }
@@ -183,7 +209,6 @@ class StickerPhotoView @JvmOverloads constructor(
         return true
     }
 
-    // Hàm tính khoảng cách giữa hai ngón tay
     private fun getDistance(event: MotionEvent): Float {
         return if (event.pointerCount == 2) {
             val dx = event.getX(0) - event.getX(1)
@@ -194,7 +219,6 @@ class StickerPhotoView @JvmOverloads constructor(
         }
     }
 
-    // Hàm tính góc giữa hai điểm
     private fun getAngle(x: Float, y: Float): Float {
         return Math.toDegrees(atan2(y, x).toDouble()).toFloat()
     }
@@ -212,15 +236,12 @@ class StickerPhotoView @JvmOverloads constructor(
     }
 
     private fun scheduleHideControlButtons() {
-        // Hủy bất kỳ runnable nào đang chờ
         hideButtonsRunnable?.let { handler.removeCallbacks(it) }
 
-        // Tạo một runnable để ẩn các nút sau 2 giây
         hideButtonsRunnable = Runnable {
             hideControlButtons()
         }
 
-        // Đặt runnable để chạy sau 2 giây
         handler.postDelayed(hideButtonsRunnable!!, 2000)
     }
 

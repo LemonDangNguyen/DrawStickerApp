@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +15,9 @@ import com.draw.adapter.MemeAdapter
 import com.draw.database.DataMemeIcon
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class StickerImportDialog : BottomSheetDialogFragment() {
+class StickerImportDialog(
+    private var stickerMemeView: StickerMemeView
+) : BottomSheetDialogFragment() {
 
     @SuppressLint("MissingInflatedId")
     override fun onCreateView(
@@ -33,12 +36,20 @@ class StickerImportDialog : BottomSheetDialogFragment() {
             setupMemeRecyclerView(dialogView, currentMemeList)
         }
         dialogView.findViewById<RecyclerView>(R.id.categoryRecyclerView).apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = categoryAdapter
         }
 
         // Cài đặt RecyclerView cho meme
         setupMemeRecyclerView(dialogView, currentMemeList)
+
+        // Xử lý nút xác nhận
+        val ivCheck = dialogView.findViewById<ImageView>(R.id.ivCheck)
+        ivCheck.setOnClickListener {
+
+            stickerMemeView.visibility = View.VISIBLE // Hiển thị StickerMemeView
+            dismiss() // Đóng dialog sau khi thêm nhãn dán
+        }
 
         return dialogView
     }
@@ -46,7 +57,7 @@ class StickerImportDialog : BottomSheetDialogFragment() {
     private fun setupMemeRecyclerView(view: View, memes: List<Int>) {
         val memeAdapter = MemeAdapter(memes)
         view.findViewById<RecyclerView>(R.id.memeRecyclerView).apply {
-            layoutManager = GridLayoutManager(context, 3)
+            layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = memeAdapter
         }
     }

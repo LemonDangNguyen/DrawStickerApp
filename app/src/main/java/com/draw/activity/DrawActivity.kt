@@ -49,6 +49,7 @@ import com.draw.ultis.ViewControl.invisible
 import com.draw.ultis.ViewControl.visible
 import com.draw.viewcustom.DrawView
 import com.draw.viewcustom.StickerImportDialog
+import com.draw.viewcustom.StickerMemeView
 import com.draw.viewcustom.StickerPhotoDialog
 import com.draw.viewcustom.StickerPhotoView
 import com.draw.viewcustom.StickerTextDialog
@@ -88,10 +89,12 @@ class DrawActivity : BaseActivity() {
         binding.btnCreateAnimation.isSelected = true
         binding.btnCreateAnimation.isClickable = true
         val stickerPhotoView = binding.stickerPhotoView
+        val stickerMemeView = binding.stickerMemeView
         binding.btnPrevios.isEnabled = false
         val stickerTextView = binding.stickerTextView
         stickerTextView.visibility = View.GONE
         stickerPhotoView.visibility =View.GONE
+        stickerMemeView.visibility = View.GONE
         isGuide = intent.getIntExtra(KEY_POSITION_ANIM_GUIDE, -1) != -1
 
 
@@ -262,7 +265,7 @@ class DrawActivity : BaseActivity() {
             showStickerPhotoDialog(stickerPhotoView)
         }
         binding.btnInsertSticker.setOnClickListener {
-            showStickerImportDialog()
+            showStickerImportDialog( stickerMemeView)
         }
 
 
@@ -388,8 +391,9 @@ class DrawActivity : BaseActivity() {
         }
     }
 
-    private fun showStickerImportDialog() {
-        val dialog = StickerImportDialog()
+    private fun showStickerImportDialog( stickerMemeView: StickerMemeView) {
+        val dialog = StickerImportDialog(stickerMemeView)
+
         dialog.show(supportFragmentManager, "StickerImportDialog")
     }
 
