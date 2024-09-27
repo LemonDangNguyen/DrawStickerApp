@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.draw.R
+
 class CategoryMemeAdapter(
     private val categories: List<Int>,
     private val onCategoryClick: (Int) -> Unit
@@ -32,27 +33,26 @@ class CategoryMemeAdapter(
         fun bind(category: Int, position: Int) {
             imageView.setImageResource(category)
 
-            // Đặt màu nền dựa trên vị trí được chọn
+            // Đặt viền bo góc nếu vị trí được chọn
             if (position == selectedPosition) {
-                itemView.setBackgroundColor(Color.LTGRAY) // Màu khi được chọn
+                itemView.setBackgroundResource(R.drawable.rounded_border) // Viền bo góc khi được chọn
             } else {
-                itemView.setBackgroundColor(Color.TRANSPARENT) // Màu mặc định
+                itemView.setBackgroundResource(android.R.color.transparent) // Không viền khi không chọn
             }
 
             itemView.setOnClickListener {
                 val previousPosition = selectedPosition
                 selectedPosition = adapterPosition
 
-                // Cập nhật màu nền của item cũ và item mới
+                // Cập nhật lại viền của item cũ và item mới
                 notifyItemChanged(previousPosition)
                 notifyItemChanged(selectedPosition)
 
                 // Gọi hàm xử lý sự kiện click
                 onCategoryClick(adapterPosition)
-
-
             }
         }
     }
 }
+
 

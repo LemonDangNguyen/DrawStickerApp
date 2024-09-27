@@ -33,10 +33,16 @@ class MemeAdapter(
             imageView.setImageResource(meme)
 
             // Đặt màu nền dựa trên vị trí được chọn
+//            if (position == selectedPosition) {
+//                itemView.setBackgroundColor(R.drawable.rounded_border) // Màu khi được chọn
+//            } else {
+//                itemView.setBackgroundColor(Color.TRANSPARENT) // Màu mặc định
+//            }
+
             if (position == selectedPosition) {
-                itemView.setBackgroundColor(Color.LTGRAY) // Màu khi được chọn
+                itemView.setBackgroundResource(R.drawable.rounded_border) // Viền bo góc khi được chọn
             } else {
-                itemView.setBackgroundColor(Color.TRANSPARENT) // Màu mặc định
+                itemView.setBackgroundResource(android.R.color.transparent) // Không viền khi không chọn
             }
 
             itemView.setOnClickListener {
