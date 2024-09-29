@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.view.GestureDetector
 import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
@@ -14,12 +15,15 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
+import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import com.draw.R
+import com.draw.activity.DrawActivity
 import com.draw.callback.ICallBackCheck
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -36,7 +40,8 @@ class StickerTextView @JvmOverloads constructor(
     private lateinit var flipButton: AppCompatImageView
     private lateinit var transformButton: AppCompatImageView
 
-
+    private lateinit var scaleGestureDetector: ScaleGestureDetector
+    private lateinit var gestureDetector: GestureDetector
 
     private var isTouchingSticker = false
     private val hideBorderHandler = Handler(Looper.getMainLooper())
@@ -54,6 +59,7 @@ class StickerTextView @JvmOverloads constructor(
     private var isHandleCheck: ICallBackCheck? = null
 
     init {
+        setupGestureDetector()
         // Initialize the border view
         borderView = RelativeLayout(context).apply {
             background = createBorderDrawable()
@@ -183,6 +189,7 @@ class StickerTextView @JvmOverloads constructor(
 
     private fun removeSticker() {
         this.visibility = View.GONE
+        //(parent as? ViewGroup)?.removeView(this)
     }
 
     private fun handleTransform(event: MotionEvent): Boolean {
@@ -350,9 +357,9 @@ class StickerTextView @JvmOverloads constructor(
         // Kiểm tra xem sự kiện chạm có nằm trong vùng của stickerTextView hoặc borderView không
         return stickerRect.contains(event.x.toInt(), event.y.toInt()) || borderRect.contains(event.x.toInt(), event.y.toInt())
     }
-
-
-
+//
+//
+//
     fun getStickerBitmap(): Bitmap {
         // Vẽ StickerTextView lên bitmap
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -360,16 +367,28 @@ class StickerTextView @JvmOverloads constructor(
         draw(canvas)
         return bitmap
     }
-    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        // Log.d("2tdp", "dispatchTouchEvent: ${event.action}")
-        if (isTouchWithinSticker(event)) {
-            // Nếu chạm vào sticker hoặc border, xử lý bình thường
-            return super.dispatchTouchEvent(event)
+    private fun setupGestureDetector() {
+        val gestureListener = GestureListener(this)
+        setOnTouchListener { view, event ->
+            gestureListener.onTouch(view, event)
         }
-        // Nếu không chạm vào sticker hoặc border, không chặn sự kiện
-        return false // Trả về false để cho phép các view khác xử lý
     }
 
+    private inner class GestureListener(private val stickerTextView: StickerTextView) : GestureDetector.SimpleOnGestureListener() {
+        private val gestureDetector = GestureDetector(stickerTextView.context, this)
 
+        // Phương thức xử lý sự kiện chạm
+        fun onTouch(view: View, event: MotionEvent): Boolean {
+            return gestureDetector.onTouchEvent(event)
+        }
 
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            // Mở dialog khi bấm 2 lần
+            val context = stickerTextView.context
+            if (context is DrawActivity) {
+                context.showStickerTextDialog(stickerTextView)
+            }
+            return true
+        }
+    }
 }

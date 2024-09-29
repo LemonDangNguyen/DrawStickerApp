@@ -259,7 +259,6 @@ class DrawActivity : BaseActivity() {
         }
         binding.btnInsertText.setOnClickListener {
             showStickerTextDialog(stickerTextView)
-          //  binding.drawView.setEraserMode(false) // hoặc setPenMode(true) nếu cần
         }
         binding.btnInsertPicture.setOnClickListener {
             showStickerPhotoDialog(stickerPhotoView)
@@ -402,7 +401,7 @@ class DrawActivity : BaseActivity() {
     }
 
 
-    private fun showStickerTextDialog(stickerTextView: StickerTextView) {
+    fun showStickerTextDialog(stickerTextView: StickerTextView) {
        val dialog = StickerTextDialog(stickerTextView, mDefaultColor)
         dialog.show(supportFragmentManager, "StickerTextDialog")
     }
