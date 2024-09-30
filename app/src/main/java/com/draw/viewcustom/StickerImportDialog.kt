@@ -62,6 +62,7 @@ class StickerImportDialog(
         return dialogView
     }
 
+
     private fun setupMemeRecyclerView(view: View, memes: List<Int>) {
         memeAdapter = MemeAdapter(memes) // Khởi tạo adapter của meme
         view.findViewById<RecyclerView>(R.id.memeRecyclerView).apply {

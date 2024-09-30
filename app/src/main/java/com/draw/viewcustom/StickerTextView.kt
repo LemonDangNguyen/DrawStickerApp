@@ -40,9 +40,6 @@ class StickerTextView @JvmOverloads constructor(
     private lateinit var flipButton: AppCompatImageView
     private lateinit var transformButton: AppCompatImageView
 
-    private lateinit var scaleGestureDetector: ScaleGestureDetector
-    private lateinit var gestureDetector: GestureDetector
-
     private var isTouchingSticker = false
     private val hideBorderHandler = Handler(Looper.getMainLooper())
     private val hideBorderRunnable = Runnable { borderView.isVisible = false }
@@ -51,10 +48,8 @@ class StickerTextView @JvmOverloads constructor(
     private var initialDistance: Float = 0f
     private var currentScale: Float = 1f
     private var initialRotation: Float = 0f
-    private var lastRotation: Float = 0f
     private var lastX: Float = 0f
     private var lastY: Float = 0f
-    private var isScaling: Boolean = false
 
     private var isHandleCheck: ICallBackCheck? = null
 
@@ -75,7 +70,7 @@ class StickerTextView @JvmOverloads constructor(
     private fun createBorderDrawable(): ShapeDrawable {
         return ShapeDrawable(RectShape()).apply {
             paint.color = Color.DKGRAY
-            paint.strokeWidth = 5f // Đổi độ dày đường viền nếu cần
+            paint.strokeWidth = 5f //  độ dày đường viền
             paint.style = Paint.Style.STROKE
         }
     }
@@ -94,7 +89,7 @@ class StickerTextView @JvmOverloads constructor(
         addView(stickerTextView)
 
         deleteButton = AppCompatImageView(context).apply {
-            setImageResource(R.drawable.ic_sticker_delete) // Thay bằng icon bạn muốn
+            setImageResource(R.drawable.ic_sticker_delete)
             layoutParams = LayoutParams(30, 30).apply {
                 addRule(ALIGN_PARENT_TOP, TRUE)
                 addRule(ALIGN_PARENT_END, TRUE)
@@ -114,7 +109,7 @@ class StickerTextView @JvmOverloads constructor(
         borderView.addView(flipButton)
 
         transformButton = AppCompatImageView(context).apply {
-            setImageResource(R.drawable.ic_sticker_resize) // Thay bằng icon bạn muốn
+            setImageResource(R.drawable.ic_sticker_resize)
             layoutParams = LayoutParams(100, 100).apply { // Tăng kích thước
                 addRule(ALIGN_PARENT_BOTTOM, TRUE)
                 addRule(ALIGN_PARENT_END, TRUE)
@@ -339,7 +334,7 @@ class StickerTextView @JvmOverloads constructor(
         val distance = hypot(dx.toDouble(), dy.toDouble()).toFloat()
 
         // Kiểm tra nếu điểm chạm nằm trong bán kính 75 pixels từ tâm nút
-        return distance <= 75f
+        return distance <= 15f
     }
 
 
