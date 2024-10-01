@@ -12,6 +12,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 
 class StickerPhotoView @JvmOverloads constructor(
     context: Context,
@@ -36,6 +37,7 @@ class StickerPhotoView @JvmOverloads constructor(
 
     init {
         initStickerView()
+        gravity = Gravity.CENTER
     }
 
     private fun initStickerView() {
@@ -87,19 +89,40 @@ class StickerPhotoView @JvmOverloads constructor(
     }
 
     private fun updateControlButtonPositions() {
-        val imageWidth = stickerImageView.width
-        val imageHeight = stickerImageView.height
+        val width = stickerImageView.width * stickerImageView.scaleX
+        val height = stickerImageView.height * stickerImageView.scaleY
 
-        // Đặt vị trí cho các nút điều khiển theo vị trí của nhãn dán
-        deleteButton.x = stickerImageView.x + imageWidth - deleteButton.width
-        deleteButton.y = stickerImageView.y
+        // Tọa độ trung tâm của stickerImageView
+        val centerX = stickerImageView.x + stickerImageView.pivotX
+        val centerY = stickerImageView.y + stickerImageView.pivotY
 
-        flipButton.x = stickerImageView.x + (imageWidth / 2) - (flipButton.width / 2)
-        flipButton.y = stickerImageView.y
+        // Tính toán các điểm góc dựa trên phép xoay
+        val points = arrayOf(
+            floatArrayOf(-width / 2, -height / 2),  // Top-left
+            floatArrayOf(width / 2, -height / 2),   // Top-right
+            floatArrayOf(width / 2, height / 2),    // Bottom-right
+            floatArrayOf(-width / 2, height / 2)    // Bottom-left
+        )
 
-        transformButton.x = stickerImageView.x + imageWidth - transformButton.width
-        transformButton.y = stickerImageView.y + imageHeight - transformButton.height
+        val rotationMatrix = android.graphics.Matrix()
+        rotationMatrix.setRotate(stickerImageView.rotation, 0f, 0f)
+
+        points.forEach {
+            rotationMatrix.mapPoints(it)
+        }
+
+        // Cập nhật vị trí của các nút dựa trên vị trí các góc sau khi xoay
+        deleteButton.x = centerX + points[1][0] - deleteButton.width / 2 // Top-right
+        deleteButton.y = centerY + points[1][1] - deleteButton.height / 2
+
+        flipButton.x = centerX + points[0][0] + (points[1][0] - points[0][0]) / 2 - flipButton.width / 2 // Middle-top
+        flipButton.y = centerY + points[0][1] + (points[1][1] - points[0][1]) / 2 - flipButton.height / 2
+
+        transformButton.x = centerX + points[2][0] - transformButton.width / 2 // Bottom-right
+        transformButton.y = centerY + points[2][1] - transformButton.height / 2
     }
+
+
 
     private fun flipSticker() {
         stickerImageView.scaleX *= -1
@@ -149,31 +172,35 @@ class StickerPhotoView @JvmOverloads constructor(
             MotionEvent.ACTION_DOWN -> {
                 lastTouchX = event.rawX
                 lastTouchY = event.rawY
-                initialDistance = getDistance(event)
+                initialDistance = 0f // Đặt khoảng cách ban đầu bằng 0 cho ngón tay đơn
                 initialRotation = getAngle(event.rawX - stickerImageView.x, event.rawY - stickerImageView.y)
                 isTransforming = true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isTransforming) {
-                    val newDistance = getDistance(event)
+                    // Tính toán di chuyển để thay đổi kích thước
+                    val deltaX = event.rawX - lastTouchX
+                    val deltaY = event.rawY - lastTouchY
 
-                    // Kiểm tra khoảng cách ban đầu
-                    if (initialDistance > 0 && newDistance > 0) {
-                        val scaleFactor = newDistance / initialDistance
-
-                        // Giới hạn tỷ lệ phóng to
-                        if (scaleFactor > 0.5f && scaleFactor < 2f) {
-                            stickerImageView.scaleX = scaleFactor
-                            stickerImageView.scaleY = scaleFactor
-                            updateControlButtonPositions()
-                        }
+                    // Tính toán tỷ lệ thay đổi theo khoảng cách di chuyển của ngón tay
+                    val scaleFactor = 1 + (deltaY / height) // Điều chỉnh tỷ lệ theo di chuyển Y
+                    if (scaleFactor > 0.5f && scaleFactor < 2f) { // Giới hạn tỷ lệ
+                        stickerImageView.scaleX *= scaleFactor
+                        stickerImageView.scaleY *= scaleFactor
                     }
 
-                    // Tính góc mới để xoay
+                    // Tính góc xoay mới
                     val newRotation = getAngle(event.rawX - stickerImageView.x, event.rawY - stickerImageView.y)
                     val rotationDelta = newRotation - initialRotation
                     stickerImageView.rotation += rotationDelta
                     initialRotation = newRotation
+
+                    // Cập nhật lại tọa độ cuối cùng cho lần di chuyển tiếp theo
+                    lastTouchX = event.rawX
+                    lastTouchY = event.rawY
+
+                    // Cập nhật vị trí của các nút sau khi thay đổi kích thước hoặc xoay
+                    updateControlButtonPositions()
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -182,6 +209,8 @@ class StickerPhotoView @JvmOverloads constructor(
         }
         return true
     }
+
+
 
     // Hàm tính khoảng cách giữa hai ngón tay
     private fun getDistance(event: MotionEvent): Float {
