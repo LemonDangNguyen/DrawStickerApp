@@ -223,12 +223,6 @@
             android:background="@color/white"
             android:visibility="invisible" />
 
-
-
-
-
-
-
     </FrameLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
