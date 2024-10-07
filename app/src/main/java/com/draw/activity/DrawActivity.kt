@@ -3,7 +3,6 @@
 package com.draw.activity
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -18,11 +17,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
@@ -52,15 +48,14 @@ import com.draw.viewcustom.StickerImportDialog
 import com.draw.viewcustom.StickerMemeView
 import com.draw.viewcustom.StickerPhotoDialog
 import com.draw.viewcustom.StickerPhotoView
-import com.draw.viewcustom.StickerTextDialog
 import com.draw.viewcustom.StickerTextView
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.draw.viewcustom.StickerTextDialog
+
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yuku.ambilwarna.AmbilWarnaDialog
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -525,8 +520,8 @@ class DrawActivity : BaseActivity() {
             canvas.drawBitmap(drawBitmap, 0f, 0f, null)
 
             // Vẽ nội dung từ StickerTextView lên canvas
-            val stickerBitmap = binding.stickerTextView.getStickerBitmap()
-            canvas.drawBitmap(stickerBitmap, 0f, 0f, null)
+//            val stickerBitmap = binding.stickerTextView.getStickerBitmap()
+//            canvas.drawBitmap(stickerBitmap, 0f, 0f, null)
 
             encoder.addFrame(frameBitmap)
         }

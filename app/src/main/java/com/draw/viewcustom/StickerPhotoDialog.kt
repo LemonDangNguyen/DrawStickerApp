@@ -60,15 +60,19 @@ class StickerPhotoDialog(
 
         val ivCheck = dialogView.findViewById<ImageView>(R.id.ivCheck)
         ivCheck.setOnClickListener {
-            // Cập nhật StickerPhotoView với ảnh đã chọn
-            selectedImagePath?.let { path ->
-                val bitmap = getBitmapFromPath(path)
+            // Kiểm tra xem người dùng đã chọn ảnh hay chưa
+            if (selectedImagePath != null) {
+                val bitmap = getBitmapFromPath(selectedImagePath!!)
                 bitmap?.let {
-                    stickerPhotoView.setImage(it) // Sử dụng Bitmap thay vì String
+                    // Cập nhật StickerPhotoView với ảnh đã chọn
+                    stickerPhotoView.setImage(it)
                 }
+                stickerPhotoView.visibility = View.VISIBLE // Hiển thị StickerPhotoView
+                dismiss() // Đóng BottomSheetDialog sau khi cập nhật
+            } else {
+                // Hiển thị thông báo khi người dùng chưa chọn ảnh
+                Toast.makeText(context, "Please select an image", Toast.LENGTH_SHORT).show()
             }
-            stickerPhotoView.visibility = View.VISIBLE // Hiển thị StickerPhotoView
-            dismiss() // Đóng BottomSheetDialog sau khi cập nhật
         }
 
 
@@ -95,6 +99,7 @@ class StickerPhotoDialog(
                 val imagePath = it.getString(columnIndex)
                 imagePaths.add(imagePath)
             }
+            imagePaths.reverse()
 
             // Thiết lập adapter cho RecyclerView
             imageAdapter = ImageAdapter(requireContext(), imagePaths) { imagePath ->

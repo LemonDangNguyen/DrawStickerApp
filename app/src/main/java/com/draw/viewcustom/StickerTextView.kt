@@ -12,12 +12,9 @@ import android.graphics.drawable.shapes.RectShape
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import android.view.View
-import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
@@ -129,7 +126,8 @@ class StickerTextView @JvmOverloads constructor(
     }
 
 
-    private fun updateBorderSize() {
+
+     fun updateBorderSize() {
         val textWidth = stickerTextView.paint.measureText(stickerTextView.text.toString())
         val textHeight = stickerTextView.paint.fontMetrics.run { bottom - top }
         val padding = 50f
@@ -177,7 +175,7 @@ class StickerTextView @JvmOverloads constructor(
         borderView.scaleY = stickerTextView.scaleY
     }
 
-    private fun flipSticker() {
+    fun flipSticker() {
         stickerTextView.scaleX *= -1
 
     }
