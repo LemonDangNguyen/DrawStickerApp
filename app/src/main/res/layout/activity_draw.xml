@@ -215,6 +215,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
         <com.draw.viewcustom.StickerTextView
+            app:showBorder="true"
+            app:showIcons="true"
             android:id="@+id/stickerTextView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

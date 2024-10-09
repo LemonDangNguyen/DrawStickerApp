@@ -1,0 +1,236 @@
+package com.draw.viewcustom
+
+import android.content.Context
+import android.graphics.*
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.ViewConfiguration
+import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
+import com.draw.R
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.sqrt
+import android.os.Handler
+
+open class StickerBaseView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
+
+    // Các biến liên quan đến thao tác zoom, xoay, lật và di chuyển
+    private var showBorder = true
+    private var isTouchingSticker = false
+    private var hideBorderHandler = Handler()
+    private val hideBorderRunnable = Runnable { setShowBorder(false) }
+
+    private val borderPaint = Paint()
+    private val stickerRect = RectF()
+
+    private var downX = 0f
+    private var downY = 0f
+    private var lastX = 0f
+    private var lastY = 0f
+
+    private var oldDistance = 0f
+    private var oldRotation = 0f
+    private var currentRotation = 0f
+
+    // Thay đổi cách dùng midpoint
+    private val midPoint = PointF()
+
+    private var touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+
+    // Icon drawables cho xoay, zoom, lật
+    private val rotateIcon = ContextCompat.getDrawable(context, R.drawable.ic_sticker_rotate)
+    private val zoomIcon = ContextCompat.getDrawable(context, R.drawable.ic_sticker_resize)
+    private val flipIcon = ContextCompat.getDrawable(context, R.drawable.ic_sticker_flip)
+
+    // Kích thước icon và vị trí
+    private val iconSize = 80f
+    private val rotateIconPosition = PointF()
+    private val zoomIconPosition = PointF()
+    private val flipIconPosition = PointF()
+
+    init {
+        // Thiết lập thuộc tính cho paint của viền
+        borderPaint.style = Paint.Style.STROKE
+        borderPaint.color = Color.DKGRAY // Đặt màu viền cho sticker
+        borderPaint.strokeWidth = 5f
+    }
+
+    // Tính toán điểm giữa của sticker
+    private fun calculateStickerMidPoint() {
+        midPoint.set(width / 2f, height / 2f)
+    }
+
+    // Tính toán khoảng cách giữa hai điểm (để zoom)
+    private fun calculateDistance(event: MotionEvent): Float {
+        val dx = event.x - midPoint.x
+        val dy = event.y - midPoint.y
+        return sqrt(dx * dx + dy * dy)
+    }
+
+    // Tính toán góc xoay giữa điểm chạm và midpoint
+    private fun calculateRotation(event: MotionEvent): Float {
+        val deltaX = event.x - midPoint.x
+        val deltaY = event.y - midPoint.y
+        return atan2(deltaY, deltaX) * (180 / Math.PI).toFloat()
+    }
+
+    // Xử lý xoay sticker xung quanh midPoint
+    fun rotateCurrentSticker(event: MotionEvent) {
+        val newRotation = calculateRotation(event)
+        val rotationDelta = newRotation - oldRotation
+        rotation = currentRotation + rotationDelta
+        oldRotation = newRotation
+        invalidate()
+    }
+
+    // Xử lý zoom sticker xung quanh midPoint
+    fun zoomCurrentSticker(event: MotionEvent) {
+        val newDistance = calculateDistance(event)
+        if (abs(newDistance - oldDistance) > touchSlop) {
+            val scaleFactor = newDistance / oldDistance
+            pivotX = midPoint.x
+            pivotY = midPoint.y
+            scaleX *= scaleFactor
+            scaleY *= scaleFactor
+            oldDistance = newDistance
+        }
+        invalidate()
+    }
+
+    // Xử lý di chuyển sticker
+    private fun moveCurrentSticker(deltaX: Float, deltaY: Float) {
+        translationX += deltaX
+        translationY += deltaY
+        invalidate()
+    }
+
+    // Phương thức vẽ icon (rotate, zoom, flip)
+    private fun drawIcons(canvas: Canvas) {
+        // Vẽ icon cho các chức năng điều chỉnh sticker
+        rotateIcon?.setBounds(
+            rotateIconPosition.x.toInt(),
+            rotateIconPosition.y.toInt(),
+            (rotateIconPosition.x + iconSize).toInt(),
+            (rotateIconPosition.y + iconSize).toInt()
+        )
+        rotateIcon?.draw(canvas)
+
+        zoomIcon?.setBounds(
+            zoomIconPosition.x.toInt(),
+            zoomIconPosition.y.toInt(),
+            (zoomIconPosition.x + iconSize).toInt(),
+            (zoomIconPosition.y + iconSize).toInt()
+        )
+        zoomIcon?.draw(canvas)
+
+        flipIcon?.setBounds(
+            flipIconPosition.x.toInt(),
+            flipIconPosition.y.toInt(),
+            (flipIconPosition.x + iconSize).toInt(),
+            (flipIconPosition.y + iconSize).toInt()
+        )
+        flipIcon?.draw(canvas)
+    }
+
+    // Tính toán vị trí các icon
+    private fun calculateIconPositions() {
+        val stickerCenterX = width / 2f
+        val stickerBottom = height.toFloat()
+
+        rotateIconPosition.set(0f, stickerBottom - iconSize)
+        zoomIconPosition.set(stickerCenterX - iconSize / 2, stickerBottom - iconSize)
+        flipIconPosition.set(width.toFloat() - iconSize, stickerBottom - iconSize)
+    }
+
+    // Kiểm tra xem người dùng có chạm vào icon hay không
+    private fun isInIconBounds(x: Float, y: Float, iconPosition: PointF): Boolean {
+        return x >= iconPosition.x && x <= iconPosition.x + iconSize &&
+                y >= iconPosition.y && y <= iconPosition.y + iconSize
+    }
+
+    // Xử lý sự kiện chạm cho các thao tác zoom, xoay và kéo
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+                lastX = translationX
+                lastY = translationY
+
+                // Tính toán lại midpoint của sticker
+                calculateStickerMidPoint()
+
+                // Hiển thị viền và các nút khi chạm
+                setShowBorder(true)
+
+                // Hủy bỏ ẩn viền và các nút
+                hideBorderHandler.removeCallbacks(hideBorderRunnable)
+
+                // Đặt lại ẩn viền sau 2 giây
+                hideBorderHandler.postDelayed(hideBorderRunnable, 2000)
+
+                // Kiểm tra nếu chạm vào một trong các icon (xoay, zoom, lật)
+                if (isInIconBounds(downX, downY, rotateIconPosition)) {
+                    return true // Xử lý xoay
+                } else if (isInIconBounds(downX, downY, zoomIconPosition)) {
+                    return true // Xử lý zoom
+                } else if (isInIconBounds(downX, downY, flipIconPosition)) {
+                    flipHorizontally()
+                    return true // Xử lý lật
+                }
+                isTouchingSticker = true
+                return true
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (isTouchingSticker) {
+                    val deltaX = event.x - downX
+                    val deltaY = event.y - downY
+                    moveCurrentSticker(deltaX, deltaY)
+                } else {
+                    // Dùng chỉ một ngón tay để zoom và xoay
+                    zoomCurrentSticker(event)
+                    rotateCurrentSticker(event)
+                }
+            }
+
+            MotionEvent.ACTION_UP -> {
+                isTouchingSticker = false
+            }
+        }
+        return true
+    }
+
+    // Phương thức để lật sticker theo chiều ngang
+    fun flipHorizontally() {
+        scaleX *= -1
+        invalidate()
+    }
+
+    // Phương thức để hiển thị hoặc ẩn viền
+    fun setShowBorder(show: Boolean) {
+        showBorder = show
+        invalidate()
+    }
+
+    // Phương thức vẽ sticker và các nút điều khiển
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        // Vẽ viền nếu cần
+        if (showBorder) {
+            // Cập nhật vị trí stickerRect trong onDraw
+            stickerRect.set(0f, 0f, width.toFloat(), height.toFloat())
+            canvas.drawRect(stickerRect, borderPaint)
+        }
+
+        // Tính toán vị trí icon và vẽ chúng
+        calculateIconPositions()
+        drawIcons(canvas)
+    }
+}

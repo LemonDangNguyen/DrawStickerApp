@@ -14,13 +14,13 @@ import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener
 
 class StickerTextDialog(
     private val stickerTextView: StickerTextView,
-    // This is the default color of the preview box
+    // Màu mặc định cho văn bản của sticker
     private var mDefaultColor: Int = 0
 ) : BottomSheetDialogFragment() {
 
-
     private lateinit var mColorPreview: View
-     override fun onCreateView(
+
+    override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
@@ -29,49 +29,48 @@ class StickerTextDialog(
 
         // Tìm các view trong layout
         val etInput = dialogView.findViewById<EditText>(R.id.etInput)
-        mColorPreview  = dialogView.findViewById(R.id.preview_selected_color)
-        mDefaultColor = 0
-        var pickColorButton = dialogView.findViewById<TextView>(R.id.pick_color_button)
-        var setcolorButton = dialogView.findViewById<TextView>(R.id.set_color_button)
+        mColorPreview = dialogView.findViewById(R.id.preview_selected_color)
 
-        setcolorButton.setOnClickListener {
-            stickerTextView.setTextColor(mDefaultColor)
-        }
-        // Thiết lập nút chọn màu
+        // Nút chọn màu
+        val pickColorButton = dialogView.findViewById<TextView>(R.id.pick_color_button)
+        val setColorButton = dialogView.findViewById<TextView>(R.id.set_color_button)
+
+        // Thiết lập sự kiện chọn màu
         pickColorButton.setOnClickListener {
             showColorPicker()
         }
 
+        // Nút thiết lập màu
+        setColorButton.setOnClickListener {
+            stickerTextView.setTextColor(mDefaultColor)
+        }
+
+        // Nút xác nhận chỉnh sửa văn bản
         val ivCheck = dialogView.findViewById<ImageView>(R.id.ivCheck)
         ivCheck.setOnClickListener {
-            val newText = etInput.text.toString()
-            stickerTextView.updateText(newText.trim())
+            val newText = etInput.text.toString().trim()
+            stickerTextView.updateText(newText) // Cập nhật văn bản cho StickerTextView
             stickerTextView.visibility = View.VISIBLE // Hiển thị StickerTextView
-            dismiss() // Đóng BottomSheetDialog sau khi cập nhật
+            dismiss() // Đóng hộp thoại sau khi cập nhật
         }
 
         return dialogView
     }
 
+    // Hiển thị hộp thoại chọn màu
     private fun showColorPicker() {
-        // The AmbilWarnaDialog callback needs 3 parameters
-        val colorPickerDialogue = AmbilWarnaDialog(this.activity, mDefaultColor,
+        val colorPickerDialog = AmbilWarnaDialog(this.activity, mDefaultColor,
             object : OnAmbilWarnaListener {
                 override fun onCancel(dialog: AmbilWarnaDialog?) {
-                    // Leave this function body blank, as the dialog
-                    // automatically closes when clicked on cancel button
+                    // Xử lý khi hủy chọn màu (nếu cần)
                 }
 
                 override fun onOk(dialog: AmbilWarnaDialog?, color: Int) {
-                    // Change the mDefaultColor to change the GFG text color
+                    // Cập nhật màu khi người dùng chọn OK
                     mDefaultColor = color
-
-                    // Now change the picked color preview box to mDefaultColor
-                    mColorPreview.setBackgroundColor(mDefaultColor)
+                    mColorPreview.setBackgroundColor(mDefaultColor) // Cập nhật preview màu
                 }
             })
-        colorPickerDialogue.show()
+        colorPickerDialog.show()
     }
-
-
 }
