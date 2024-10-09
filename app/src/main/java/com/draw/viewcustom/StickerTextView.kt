@@ -1,4 +1,5 @@
 package com.draw.viewcustom
+
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
@@ -49,6 +50,9 @@ class StickerTextView @JvmOverloads constructor(
         layoutParams = FrameLayout.LayoutParams(newWidth, newHeight).apply {
             gravity = android.view.Gravity.CENTER
         }
+
+        // Gọi invalidate để vẽ lại viền và các icon điều khiển
+        invalidate()
     }
 
     // Cập nhật văn bản của sticker
