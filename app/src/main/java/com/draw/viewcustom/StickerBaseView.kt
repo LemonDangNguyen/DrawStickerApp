@@ -233,4 +233,8 @@ open class StickerBaseView @JvmOverloads constructor(
         calculateIconPositions()
         drawIcons(canvas)
     }
+
+    fun nothingss(){
+
+    }
 }
