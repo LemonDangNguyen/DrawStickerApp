@@ -204,22 +204,13 @@
             android:layout_height="match_parent"
             app:penColor="#000000"
             app:penWidth="10" />
-        <com.draw.viewcustom.StickerPhotoView
-            app:showBorder="true"
-            app:showIcons="true"
-            android:id="@+id/stickerPhotoView"
+        <FrameLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/sticker_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-        <com.draw.viewcustom.StickerMemeView
-            android:id="@+id/stickerMemeView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-        <com.draw.viewcustom.StickerTextView
-            app:showBorder="true"
-            app:showIcons="true"
-            android:id="@+id/stickerTextView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+        </FrameLayout>
+
         <ImageView
             android:id="@+id/img_preview"
             android:layout_width="match_parent"

@@ -4,6 +4,7 @@ package com.draw.activity
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -19,6 +20,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
@@ -45,11 +47,18 @@ import com.draw.ultis.ViewControl.invisible
 import com.draw.ultis.ViewControl.visible
 import com.draw.viewcustom.DrawView
 import com.draw.viewcustom.StickerImportDialog
-import com.draw.viewcustom.StickerMemeView
+import com.draw.viewcustom.view.StickerMemeView
 import com.draw.viewcustom.StickerPhotoDialog
-import com.draw.viewcustom.StickerPhotoView
-import com.draw.viewcustom.StickerTextView
+import com.draw.viewcustom.view.StickerPhotoView
+import com.draw.viewcustom.view.StickerTextView
 import com.draw.viewcustom.StickerTextDialog
+import com.draw.viewcustom.model.Sticker
+import com.draw.viewcustom.model.StickerHistoryModel
+import com.draw.viewcustom.model.StickerMeme
+import com.draw.viewcustom.model.StickerPhoto
+import com.draw.viewcustom.model.StickerText
+import com.draw.viewcustom.presenter.StickerPresenter
+import com.draw.viewcustom.presenter.StickerPresenterImpl
 
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
@@ -76,6 +85,13 @@ class DrawActivity : BaseActivity() {
     private lateinit var dialog: Dialog
     private lateinit var bindingDialog: DialogProgressBinding
     private var mDefaultColor = 0
+
+    // Khai báo Presenter
+    private lateinit var presenter: StickerPresenter
+
+    // FrameLayout để chứa các sticker
+    private lateinit var stickerContainer: FrameLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -83,13 +99,18 @@ class DrawActivity : BaseActivity() {
         binding.btnCreateAnimation.isClickable = false
         binding.btnCreateAnimation.isSelected = true
         binding.btnCreateAnimation.isClickable = true
-        val stickerPhotoView = binding.stickerPhotoView
-        val stickerMemeView = binding.stickerMemeView
+
         binding.btnPrevios.isEnabled = false
-        val stickerTextView = binding.stickerTextView
-        stickerTextView.visibility = View.GONE
-        stickerPhotoView.visibility =View.GONE
-        stickerMemeView.visibility = View.GONE
+
+        // Khởi tạo FrameLayout chứa các sticker
+        stickerContainer = findViewById(R.id.sticker_container)
+
+        // Khởi tạo Presenter với StickerHistoryModel (Model để quản lý lịch sử undo/redo)
+        val stickerHistoryModel = StickerHistoryModel()
+        presenter = StickerPresenterImpl(this@DrawActivity, stickerHistoryModel)
+
+
+
         isGuide = intent.getIntExtra(KEY_POSITION_ANIM_GUIDE, -1) != -1
 
 
@@ -212,7 +233,6 @@ class DrawActivity : BaseActivity() {
             binding.btnEraser.backgroundTintList = null
             binding.btnPen.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#01C296"))
             binding.btnPen.imageTintList = null
-            stickerTextView.visibility = View.VISIBLE
         }
 
         binding.btnEraser.setOnClickListener {
@@ -231,6 +251,7 @@ class DrawActivity : BaseActivity() {
 
         binding.btnReset.setOnClickListener {
             binding.drawView.clearDraw()
+            clearAllStickers()
         }
 
         binding.btnColor.setOnClickListener {
@@ -252,14 +273,17 @@ class DrawActivity : BaseActivity() {
             adapter.makeCopy(binding.drawView.width, binding.drawView.height)
             binding.lnPenwidth.gone()
         }
+        // Cài đặt các sự kiện khi nhấn nút để hiển thị các Dialog
         binding.btnInsertText.setOnClickListener {
-            showStickerTextDialog(stickerTextView)
+            showStickerTextDialog()  // Hiển thị dialog cho sticker văn bản
         }
+
         binding.btnInsertPicture.setOnClickListener {
-            showStickerPhotoDialog(stickerPhotoView)
+            showStickerPhotoDialog()  // Hiển thị dialog cho sticker ảnh
         }
+
         binding.btnInsertSticker.setOnClickListener {
-            showStickerImportDialog( stickerMemeView)
+            showStickerImportDialog()  // Hiển thị dialog cho sticker meme
         }
 
 
@@ -385,20 +409,22 @@ class DrawActivity : BaseActivity() {
         }
     }
 
-    private fun showStickerImportDialog( stickerMemeView: StickerMemeView) {
-        val dialog = StickerImportDialog(stickerMemeView)
-        dialog.show(supportFragmentManager, "StickerImportDialog")
+    // Hiển thị Dialog nhập sticker văn bản
+    private fun showStickerTextDialog() {
+        val dialog = StickerTextDialog(presenter)  // Truyền Presenter vào Dialog
+        dialog.show(supportFragmentManager, "StickerTextDialog")
     }
 
-    private fun showStickerPhotoDialog(stickerPhotoView: StickerPhotoView) {
-        val dialog = StickerPhotoDialog(stickerPhotoView, this@DrawActivity)
+    // Hiển thị Dialog nhập sticker ảnh
+    private fun showStickerPhotoDialog() {
+        val dialog = StickerPhotoDialog(presenter, this)
         dialog.show(supportFragmentManager, "StickerPhotoDialog")
     }
 
-
-    fun showStickerTextDialog(stickerTextView: StickerTextView) {
-       val dialog = StickerTextDialog(stickerTextView, mDefaultColor)
-        dialog.show(supportFragmentManager, "StickerTextDialog")
+    // Hiển thị Dialog nhập sticker meme
+    private fun showStickerImportDialog() {
+        val dialog = StickerImportDialog(presenter)
+        dialog.show(supportFragmentManager, "StickerImportDialog")
     }
 
 
@@ -560,5 +586,62 @@ class DrawActivity : BaseActivity() {
 
 
 
+    // Các phương thức từ StickerView Interface để quản lý hiển thị sticker
+    fun showSticker(sticker: Sticker) {
+        when (sticker) {
+            is StickerText -> {
+                val stickerTextView = StickerTextView(this)
+                stickerTextView.updateText(sticker.text)
+                stickerTextView.setTextSize(sticker.textSize)
+                stickerTextView.setTextColor(sticker.textColor)
+                stickerTextView.setFont(sticker.textFont)
+
+                // Set vị trí và xoay của Sticker
+                stickerTextView.x = sticker.x
+                stickerTextView.y = sticker.y
+                stickerTextView.rotation = sticker.rotation
+
+                // Thêm sticker vào FrameLayout
+                stickerContainer.addView(stickerTextView)
+            }
+            is StickerPhoto -> {
+                val stickerPhotoView = StickerPhotoView(this)
+                stickerPhotoView.setImageBitmap(sticker.bitmap)
+
+                // Set vị trí và xoay của Sticker
+                stickerPhotoView.x = sticker.x
+                stickerPhotoView.y = sticker.y
+                stickerPhotoView.rotation = sticker.rotation
+
+                // Thêm sticker vào FrameLayout
+                stickerContainer.addView(stickerPhotoView)
+            }
+            is StickerMeme -> {
+                val stickerMemeView = StickerMemeView(this)
+                stickerMemeView.setImageResource(sticker.resId)
+
+                // Set vị trí và xoay của Sticker
+                stickerMemeView.x = sticker.x
+                stickerMemeView.y = sticker.y
+                stickerMemeView.rotation = sticker.rotation
+
+                // Thêm sticker vào FrameLayout
+                stickerContainer.addView(stickerMemeView)
+            }
+        }
+    }
+
+    fun removeSticker(sticker: Sticker) {
+        // Tìm sticker theo View và xóa nó khỏi FrameLayout
+        stickerContainer.removeView(sticker.view)
+    }
+
+    fun clearAllStickers() {
+        stickerContainer.removeAllViews()
+    }
+
+     fun getContext(): Context {
+        return this
+    }
 
 }

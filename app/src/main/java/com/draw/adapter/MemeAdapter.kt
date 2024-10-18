@@ -31,14 +31,6 @@ class MemeAdapter(
 
         fun bind(meme: Int, position: Int) {
             imageView.setImageResource(meme)
-
-            // Đặt màu nền dựa trên vị trí được chọn
-//            if (position == selectedPosition) {
-//                itemView.setBackgroundColor(R.drawable.rounded_border) // Màu khi được chọn
-//            } else {
-//                itemView.setBackgroundColor(Color.TRANSPARENT) // Màu mặc định
-//            }
-
             if (position == selectedPosition) {
                 itemView.setBackgroundResource(R.drawable.rounded_border) // Viền bo góc khi được chọn
             } else {

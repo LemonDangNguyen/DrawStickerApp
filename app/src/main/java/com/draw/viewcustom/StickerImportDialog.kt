@@ -13,9 +13,12 @@ import com.draw.R
 import com.draw.adapter.CategoryMemeAdapter
 import com.draw.adapter.MemeAdapter
 import com.draw.database.DataMemeIcon
+
+import com.draw.viewcustom.presenter.StickerPresenter
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+
 class StickerImportDialog(
-    private var stickerMemeView: StickerMemeView
+    private val presenter: StickerPresenter // Thay vì truyền StickerMemeView, ta sẽ truyền Presenter
 ) : BottomSheetDialogFragment() {
 
     private lateinit var memeAdapter: MemeAdapter // Thêm biến này để truy cập adapter của meme
@@ -51,9 +54,8 @@ class StickerImportDialog(
             val selectedMeme = memeAdapter.getSelectedMeme()
 
             if (selectedMeme != null) {
-                // Đặt meme vào StickerMemeView
-                stickerMemeView.visibility = View.VISIBLE
-                stickerMemeView.setImageResource(selectedMeme) // Thêm hình ảnh meme
+                // Gọi Presenter để thêm sticker meme
+                presenter.addStickerMeme(selectedMeme, 100f, 200f)
             }
 
             dismiss() // Đóng dialog sau khi thêm nhãn dán
@@ -61,7 +63,6 @@ class StickerImportDialog(
 
         return dialogView
     }
-
 
     private fun setupMemeRecyclerView(view: View, memes: List<Int>) {
         memeAdapter = MemeAdapter(memes) // Khởi tạo adapter của meme
