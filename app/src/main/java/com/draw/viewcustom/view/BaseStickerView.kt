@@ -140,7 +140,6 @@ abstract class BaseStickerView @JvmOverloads constructor(
                 this.y += deltaY
                 lastX = event.rawX
                 lastY = event.rawY
-                updateBorderSize()
             }
 
             MotionEvent.ACTION_UP -> {
@@ -183,7 +182,6 @@ abstract class BaseStickerView @JvmOverloads constructor(
                     if (newScaleX > 0.1f && newScaleY > 0.1f) {
                         this.scaleX = newScaleX
                         this.scaleY = newScaleY
-                        updateBorderSize()
                     }
 
                     lastX = event.rawX
@@ -250,16 +248,13 @@ abstract class BaseStickerView @JvmOverloads constructor(
         updateButtonPositions()
     }
 
-
-
-
     private fun calculateMidPoint() {
         midPoint[0] = this.x + (this.width * this.scaleX) / 2
         midPoint[1] = this.y + (this.height * this.scaleY) / 2
     }
 
     // Cập nhật vị trí của các nút điều khiển
-    private fun updateButtonPositions() {
+     fun updateButtonPositions() {
         val buttonSize = 50
         val borderPadding = -3
 
