@@ -41,19 +41,26 @@ class StickerTextDialog(
             showColorPicker()
         }
 
-        // Xử lý nút ivCheck khi đã chọn màu
         ivCheck.setOnClickListener {
             val newText = etInput.text.toString().trim()
 
-            // Đặt sticker xuất hiện ở giữa màn hình
+            // Đảm bảo tính toán vị trí sau khi layout của parentView đã hoàn tất
             val parentView = activity?.window?.decorView?.findViewById<View>(android.R.id.content)
-            val centerX = parentView?.width?.div(2)?.toFloat() ?: 100f // Giá trị mặc định nếu không tính toán được
-            val centerY = parentView?.height?.div(2)?.toFloat() ?: 200f
+            parentView?.post {
+                val parentWidth = parentView.width
+                val parentHeight = parentView.height
 
-            // Gọi Presenter để thêm sticker văn bản
-            presenter.addStickerText(newText, 24f, mDefaultColor, "sans-serif", centerX, centerY)
-            dismiss() // Đóng hộp thoại sau khi cập nhật
+                // Tính toán tọa độ giữa
+                val centerX = parentWidth / 2f
+                val centerY = parentHeight / 2f
+
+                // Gọi Presenter để thêm sticker văn bản
+                presenter.addStickerText(newText, 24f, mDefaultColor, "sans-serif", centerX, centerY)
+
+                dismiss() // Đóng hộp thoại sau khi cập nhật
+            }
         }
+
         isCancelable = false
         return dialogView
 

@@ -57,35 +57,33 @@ class StickerPhotoDialog(
         ivCheck.setOnClickListener {
             if (selectedImagePath != null) {
                 getBitmapFromPath(selectedImagePath!!)?.let { bitmap ->
-                    // Giữ nguyên kích thước 480 và tỷ lệ ảnh
                     val scaledWidth = 480
-                    val scaledHeight = (scaledWidth * bitmap.height / bitmap.width) // Giữ tỷ lệ ảnh
+                    val scaledHeight = 480 * bitmap.height / bitmap.width
 
-                    // Lấy View cha để tính vị trí giữa
-                    val parentView = dialogView.parent as? ViewGroup
-                    val parentWidth = parentView?.width ?: 0
-                    val parentHeight = parentView?.height ?: 0
+                    // Tính toán để ảnh xuất hiện ở giữa container
+                    val parentWidth = (container?.width ?: 0) / 2f
+                    val parentHeight = (container?.height ?: 0) / 2f
 
-                    // Tính toán vị trí trung tâm của sticker
-                    val xPos = (parentWidth - scaledWidth) / 2f
-                    val yPos = (parentHeight - scaledHeight) / 2f
+                    // Căn chỉnh tọa độ ảnh để nó ở giữa màn hình
+                    val centerX = parentWidth - (scaledWidth / 2f)
+                    val centerY = parentHeight - (scaledHeight / 2f)
 
-                    // Thêm sticker với vị trí và kích thước đã tính toán
+                    // Gọi hàm để thêm Sticker và căn giữa ảnh
                     presenter.addStickerPhoto(
                         Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true),
-                        xPos,
-                        yPos
+                        centerX,
+                        centerY
                     )
                 }
-                dismiss() // Đóng BottomSheetDialog sau khi thêm sticker
+                dismiss() // Đóng BottomSheetDialog sau khi cập nhật
             } else {
                 Toast.makeText(context, "Please select an image", Toast.LENGTH_SHORT).show()
             }
         }
 
-
         return dialogView
     }
+
 
     private fun getBitmapFromPath(path: String): Bitmap? {
         return BitmapFactory.decodeFile(path)
