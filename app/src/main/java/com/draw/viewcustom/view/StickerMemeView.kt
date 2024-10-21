@@ -2,6 +2,7 @@ package com.draw.viewcustom.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -19,8 +20,12 @@ class StickerMemeView @JvmOverloads constructor(
     }
 
     private fun setupView() {
+        gravity = Gravity.CENTER
         imageView = AppCompatImageView(context).apply {
-            layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+            layoutParams =
+                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                    addRule(CENTER_IN_PARENT, TRUE)
+                }
         }
         addView(imageView)
     }

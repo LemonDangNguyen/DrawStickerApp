@@ -1,11 +1,8 @@
 package com.draw.viewcustom.view
 
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RectShape
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -38,12 +35,13 @@ abstract class BaseStickerView @JvmOverloads constructor(
         setupView()
         alignStickerCenter()
     }
+
     private fun alignStickerCenter() {
         post {
             val parentWidth = (parent as View).width
             val parentHeight = (parent as View).height
 
-            // Tính toán vị trí giữa
+            // Tính toán vị trí trung tâm cho Sticker
             val centerX = (parentWidth - this.width * this.scaleX) / 2
             val centerY = (parentHeight - this.height * this.scaleY) / 2
 
@@ -107,36 +105,14 @@ abstract class BaseStickerView @JvmOverloads constructor(
 
         updateButtonPositions()
     }
-    private fun createBorderDrawable(): ShapeDrawable {
-        // Tạo một ShapeDrawable với RectShape để vẽ viền
-        return object : ShapeDrawable(RectShape()) {
-            override fun draw(canvas: Canvas) {
-                // Lấy kích thước hiện tại của sticker
-                val stickerWidth = this@BaseStickerView.width * this@BaseStickerView.scaleX
-                val stickerHeight = this@BaseStickerView.height * this@BaseStickerView.scaleY
 
-                // Thêm padding để tạo khoảng cách giữa sticker và viền
-                val padding = 5f // Giảm padding để viền gần với sticker hơn
-
-                // Tính toán kích thước của viền dựa trên sticker và padding
-                val left = padding
-                val top = padding
-                val right = stickerWidth + padding
-                val bottom = stickerHeight + padding
-
-                // Cập nhật paint để vẽ viền
-                paint.color = Color.DKGRAY
-                paint.strokeWidth = 3f  // Giảm độ dày của viền để mỏng hơn
-                paint.style = Paint.Style.STROKE
-
-                // Vẽ viền bao quanh sticker với khoảng cách padding nhỏ
-                canvas.drawRect(left, top, right, bottom, paint)
-            }
+    private fun createBorderDrawable(): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setStroke(5, Color.DKGRAY) // Độ dày và màu của viền
+            setColor(Color.TRANSPARENT) // Màu nền là trong suốt
         }
     }
-
-
-
 
     // Hiển thị viền và các nút điều khiển
     private fun showBorder() {
@@ -182,6 +158,7 @@ abstract class BaseStickerView @JvmOverloads constructor(
     // Xử lý việc lật sticker
     protected open fun flipSticker() {
         this.scaleX *= -1
+        updateButtonPositions()
     }
 
     // Xử lý việc thay đổi kích thước sticker
@@ -222,7 +199,6 @@ abstract class BaseStickerView @JvmOverloads constructor(
         return true
     }
 
-
     // Xử lý việc xoay sticker
     protected open fun handleRotate(event: MotionEvent): Boolean {
         when (event.action) {
@@ -251,66 +227,64 @@ abstract class BaseStickerView @JvmOverloads constructor(
         }
         return true
     }
-
     private fun updateBorderSize() {
-        // Lấy kích thước thực tế của sticker, bao gồm cả scale
-        val stickerWidth = (this.width * this.scaleX).toInt()
-        val stickerHeight = (this.height * this.scaleY).toInt()
+        // Lấy kích thước của Sticker (View con đầu tiên)
+        val stickerWidth = this.childCount.takeIf { it > 0 }?.let { getChildAt(0).width } ?: 0
+        val stickerHeight = this.childCount.takeIf { it > 0 }?.let { getChildAt(0).height } ?: 0
 
-        // Khoảng cách giữa viền và sticker
-        val padding = 20
+        Log.d("StickerSize", "Width: $stickerWidth, Height: $stickerHeight")
 
-        // Cập nhật kích thước của borderView để nó vừa khít sticker
+        // Đặt khoảng cách từ Sticker đến viền (padding)
+        val padding = 10f
+
+        // Cập nhật kích thước của borderView với khoảng cách padding
         borderView.layoutParams = LayoutParams(
-            stickerWidth + 2 * padding, // Kích thước viền cộng với padding hai bên
-            stickerHeight + 2 * padding // Kích thước viền cộng với padding trên dưới
+            (stickerWidth + 2 * padding).toInt(),  // Cộng thêm padding vào cả 2 bên
+            (stickerHeight + 2 * padding).toInt()  // Cộng thêm padding vào cả 2 bên
         ).apply {
-            addRule(CENTER_IN_PARENT, TRUE) // Giữ viền ở giữa sticker
+            addRule(CENTER_IN_PARENT, TRUE)  // Đảm bảo viền nằm ở trung tâm Sticker
         }
 
+        // Cập nhật lại view
         borderView.requestLayout()
-
-        // Cập nhật vị trí của các nút điều khiển (nút xóa, xoay, resize)
         updateButtonPositions()
     }
+
+
+
+
     private fun calculateMidPoint() {
         midPoint[0] = this.x + (this.width * this.scaleX) / 2
         midPoint[1] = this.y + (this.height * this.scaleY) / 2
     }
+
     // Cập nhật vị trí của các nút điều khiển
     private fun updateButtonPositions() {
         val buttonSize = 50
         val borderPadding = -3
 
-        // Đặt vị trí của nút xóa (delete) ở góc trên cùng bên phải
         deleteButton.layoutParams = LayoutParams(buttonSize, buttonSize).apply {
             addRule(ALIGN_PARENT_TOP, TRUE)
             addRule(ALIGN_PARENT_END, TRUE)
             setMargins(borderPadding, borderPadding, borderPadding, borderPadding)
         }
 
-        // Đặt vị trí của nút lật (flip) ở phía trên, giữa
         flipButton.layoutParams = LayoutParams(buttonSize, buttonSize).apply {
             addRule(ALIGN_PARENT_TOP, TRUE)
             addRule(CENTER_HORIZONTAL, TRUE)
             setMargins(0, borderPadding, 0, borderPadding)
         }
 
-        // Đặt vị trí của nút thay đổi kích thước (transform) ở góc dưới cùng bên phải
         transformButton.layoutParams = LayoutParams(buttonSize, buttonSize).apply {
             addRule(ALIGN_PARENT_BOTTOM, TRUE)
             addRule(ALIGN_PARENT_END, TRUE)
             setMargins(borderPadding, 0, borderPadding, borderPadding)
-
-
         }
 
-        // Đặt vị trí của nút xoay (rotate) ở góc dưới cùng bên trái
         rotateButton.layoutParams = LayoutParams(buttonSize, buttonSize).apply {
             addRule(ALIGN_PARENT_BOTTOM, TRUE)
             addRule(ALIGN_PARENT_START, TRUE)
             setMargins(borderPadding, 0, borderPadding, borderPadding)
         }
     }
-
 }

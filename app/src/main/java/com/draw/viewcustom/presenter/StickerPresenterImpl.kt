@@ -1,6 +1,7 @@
 package com.draw.viewcustom.presenter
 
 import android.graphics.Bitmap
+import android.view.View
 import com.draw.activity.DrawActivity
 import com.draw.viewcustom.view.StickerMemeView
 import com.draw.viewcustom.view.StickerPhotoView
@@ -19,6 +20,7 @@ class StickerPresenterImpl(
 ) : StickerPresenter {
 
     // Thêm Sticker Text
+    // Thêm Sticker Text
     override fun addStickerText(text: String, textSize: Float, textColor: Int, textFont: String, x: Float, y: Float) {
         val stickerView = StickerTextView(view.getContext())
         stickerView.updateText(text)
@@ -26,19 +28,26 @@ class StickerPresenterImpl(
         stickerView.setTextColor(textColor)
         stickerView.setFont(textFont)
 
-        val stickerText = StickerText(
-            view = stickerView,
-            x = x,
-            y = y,
-            rotation = 0f,
-            text = text,
-            textSize = textSize,
-            textColor = textColor,
-            textFont = textFont
-        )
+        // Đảm bảo sticker được đặt ở vị trí trung tâm của parentView
+        val parentView = view.findViewById<View>(android.R.id.content)
+        parentView.post {
+            val centerX = parentView.width / 2f - (stickerView.width / 2f)
+            val centerY = parentView.height / 2f - (stickerView.height / 2f)
 
-        model.addAction(StickerAction(stickerView, Pair(x, y), ActionType.ADD))
-        view.showSticker(stickerText)
+            val stickerText = StickerText(
+                view = stickerView,
+                x = centerX,  // Sử dụng tọa độ trung tâm tính được
+                y = centerY,  // Sử dụng tọa độ trung tâm tính được
+                rotation = 0f,
+                text = text,
+                textSize = textSize,
+                textColor = textColor,
+                textFont = textFont
+            )
+
+            model.addAction(StickerAction(stickerView, Pair(centerX, centerY), ActionType.ADD))
+            view.showSticker(stickerText)
+        }
     }
 
     // Thêm Sticker Photo

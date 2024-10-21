@@ -3,6 +3,7 @@ package com.draw.viewcustom.view
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.TextView
 
@@ -23,7 +24,12 @@ class StickerTextView @JvmOverloads constructor(
             text = "Sticker Text"
             textSize = 24f
             setTextColor(Color.BLACK)
+            gravity = Gravity.CENTER
             setBackgroundColor(Color.TRANSPARENT)
+            layoutParams =
+                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                    addRule(CENTER_IN_PARENT, TRUE)
+                }
         }
         addView(stickerTextView)
     }
